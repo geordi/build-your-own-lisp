@@ -1,8 +1,14 @@
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES += main.cpp
+SOURCES += parsing.c \
+    mpc.c
 
 LIBS += -ledit
+
+HEADERS += \
+    mpc.h
+
+CFLAGS += -fpermissive
