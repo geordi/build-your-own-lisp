@@ -41,7 +41,7 @@ long eval( mpc_ast_t* t ) {
 }
 
 
-int main(int argc, char** argv) {
+int main( int argc, char** argv ) {
 
     /* Create Some Parsers */
     mpc_parser_t* Number   = mpc_new( "number" );
@@ -60,17 +60,17 @@ int main(int argc, char** argv) {
                Number, Operator, Expr, Lispy );
 
     /* Print Version and Exit Information */
-    puts("Lispy Version 0.0.0.0.3");
-    puts("Press Ctrl+c to Exit\n");
+    puts( "Lispy Version 0.0.0.0.3" );
+    puts( "Press Ctrl+c to Exit\n" );
 
     /* In a never ending loop */
-    while (1) {
+    while ( 1 ) {
 
         /* Output our prompt and get input */
         char* input = readline( "lispy> " );
 
         /* Add input to history */
-        add_history(input);
+        add_history( input );
 
         /* Attempt to Parse the user Input */
         mpc_result_t r;
@@ -81,17 +81,17 @@ int main(int argc, char** argv) {
             mpc_ast_delete( r.output );
         } else {
             /* Otherwise Print the Error */
-            mpc_err_print(r.error);
-            mpc_err_delete(r.error);
+            mpc_err_print( r.error );
+            mpc_err_delete( r.error );
         }
 
         /* Free retrieved input */
-        free(input);
+        free( input );
 
     }
 
     /* Undefine and Delete our Parsers */
-    mpc_cleanup(4, Number, Operator, Expr, Lispy);
+    mpc_cleanup( 4, Number, Operator, Expr, Lispy );
 
     return 0;
 }
