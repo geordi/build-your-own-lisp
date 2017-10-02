@@ -11,11 +11,12 @@
 typedef struct {
     int type;
     long num;
+    double dbl;
     int err;
 } lval;
 
 /* Create Enumeration of Possible lval Types */
-enum { LVAL_NUM, LVAL_ERR };
+enum { LVAL_NUM, LVAL_DBL, LVAL_ERR };
 
 /* Create Enumeration of Possible Error Types */
 enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
@@ -26,6 +27,16 @@ lval lval_num( long x ) {
 
     v.type = LVAL_NUM;
     v.num = x;
+
+    return v;
+}
+
+/* Create a new double type lval */
+lval lval_dbl( double x ) {
+    lval v;
+
+    v.type = LVAL_DBL;
+    v.dbl = x;
 
     return v;
 }
@@ -47,6 +58,8 @@ void lval_print( lval v ) {
     /* In the case the type is a number print it */
     /* Then 'break' out of the switch. */
     case LVAL_NUM: printf( "%li", v.num ); break;
+
+    case LVAL_DBL: printf( "%f", v.dbl ); break;
 
         /* In the case the type is an error */
     case LVAL_ERR:
@@ -78,7 +91,20 @@ lval eval_op( lval x, char* op, lval y ) {
     if (x.type == LVAL_ERR) { return x; }
     if (y.type == LVAL_ERR) { return y; }
 
-    if ( strcmp( op, "+" ) == 0 ) { return lval_num( x.num + y.num ); }
+    if ( strcmp( op, "+" ) == 0 ) {
+        if ( x.type == LVAL_DBL && y.type == LVAL_DBL ) {
+            return lval_dbl( x.dbl + y.dbl );
+        }
+        else if ( x.type == LVAL_DBL && y.type == LVAL_NUM ) {
+            return lval_dbl( x.dbl + y.num );
+        }
+        else if ( x.type == LVAL_NUM && y.type == LVAL_DBL ) {
+            return lval_dbl( x.num + y.dbl );
+        }
+        else {
+            return lval_num( x.num + y.num );
+        }
+    }
     if ( strcmp( op, "-" ) == 0 ) { return lval_num( x.num - y.num ); }
     if ( strcmp( op, "*" ) == 0 ) { return lval_num( x.num * y.num ); }
     if ( strcmp( op, "/" ) == 0 ) {
@@ -114,6 +140,12 @@ lval eval( mpc_ast_t* t ) {
         long x = strtol( t->contents, NULL, 10 );
         return errno != ERANGE ? lval_num( x ) : lval_err( LERR_BAD_NUM );
     }
+    else if ( strstr( t->tag, "double" ) ) {
+        /* Check if there is some error in conversion */
+        errno = 0;
+        double x = strtod( t->contents, NULL );
+        return errno != ERANGE ? lval_dbl( x ) : lval_err( LERR_BAD_NUM );
+    }
 
     /* The operator is always second child. */
     char* op = t->children[ 1 ]->contents;
@@ -136,19 +168,21 @@ int main( int argc, char** argv ) {
 
     /* Create Some Parsers */
     mpc_parser_t* Number   = mpc_new( "number" );
+    mpc_parser_t* Double   = mpc_new( "double" );
     mpc_parser_t* Operator = mpc_new( "operator" );
     mpc_parser_t* Expr     = mpc_new( "expr" );
     mpc_parser_t* Lispy    = mpc_new( "lispy" );
 
     /* Define them with the following Language */
     mpca_lang( MPCA_LANG_DEFAULT,
-               "                                                   \
-               number   : /-?[0-9]+/ ;                             \
-               operator : '+' | '-' | '*' | '/' | '^' | '%' ;      \
-               expr     : <number> | '(' <operator> <expr>+ ')' ;  \
-               lispy    : /^/ <operator> <expr>+ /$/ ;             \
+               "                                                              \
+               number   : /-?[0-9]+/ ;                                        \
+               double   : /-?[0-9]+\\.[0-9]+/;                                \
+               operator : '+' | '-' | '*' | '/' | '^' | '%' ;                 \
+               expr     : <double> | <number> | '(' <operator> <expr>+ ')' ;  \
+               lispy    : /^/ <operator> <expr>+ /$/ ;                        \
                ",
-               Number, Operator, Expr, Lispy );
+               Number, Double, Operator, Expr, Lispy );
 
     /* Print Version and Exit Information */
     puts( "Lispy Version 0.0.0.0.4" );
