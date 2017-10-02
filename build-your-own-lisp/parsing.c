@@ -216,7 +216,7 @@ int main( int argc, char** argv ) {
     }
 
     /* Undefine and Delete our Parsers */
-    mpc_cleanup( 4, Number, Operator, Expr, Lispy );
+    mpc_cleanup( 5, Number, Double, Operator, Expr, Lispy );
 
     return 0;
 }
