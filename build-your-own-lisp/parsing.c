@@ -95,6 +95,12 @@ lval eval_op( lval x, char* op, lval y ) {
         }
         return result;
     }
+    if ( strcmp( op, "%" ) == 0 ) {
+        /* If second operand is zero return error */
+        return y.num == 0
+                ? lval_err( LERR_DIV_ZERO )
+                : lval_num( x.num % y.num );
+    }
 
     return lval_err( LERR_BAD_OP );
 }
@@ -138,14 +144,14 @@ int main( int argc, char** argv ) {
     mpca_lang( MPCA_LANG_DEFAULT,
                "                                                   \
                number   : /-?[0-9]+/ ;                             \
-               operator : '+' | '-' | '*' | '/' | '^' ;            \
+               operator : '+' | '-' | '*' | '/' | '^' | '%' ;      \
                expr     : <number> | '(' <operator> <expr>+ ')' ;  \
                lispy    : /^/ <operator> <expr>+ /$/ ;             \
                ",
                Number, Operator, Expr, Lispy );
 
     /* Print Version and Exit Information */
-    puts( "Lispy Version 0.0.0.0.3" );
+    puts( "Lispy Version 0.0.0.0.4" );
     puts( "Press Ctrl+c to Exit\n" );
 
     /* In a never ending loop */
